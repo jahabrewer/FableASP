@@ -29,5 +29,8 @@ namespace Fable.Models
         {
             return new ApplicationDbContext();
         }
+
+        public DbSet<School> Schools { get; set; }
+        public DbSet<Absence> Absences { get; set; } 
     }
 }
