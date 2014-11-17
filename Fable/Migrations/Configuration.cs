@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using Fable.Models;
 using Microsoft.AspNet.Identity.EntityFramework;
 
@@ -18,28 +20,49 @@ namespace Fable.Migrations
         {
             #region Seed users and roles
 
-            const string userEmail = "ja@nz.com";
-            const string userPassword = "glasslegstring";
             const string canCreateAbsenceRoleName = "canCreateAbsence";
+            const string canCreateApplicationRoleName = "canCreateApplication";
+
+            var roles = new[]
+            {
+                canCreateAbsenceRoleName,
+                canCreateApplicationRoleName,
+            };
+
+            const string adminEmail = "ava@example.com";
+            const string teacherEmail = "tess@example.com";
+            const string substituteEmail = "steve@example.com";
+
+            var users = new[]
+            {
+                new {Email = adminEmail, Password = "avaForAdmin", Roles = new string[] {}},
+                new {Email = teacherEmail, Password = "tessForTeacher", Roles = new[] {canCreateAbsenceRoleName}},
+                new {Email = substituteEmail, Password = "steveForSubstitute", Roles = new[] {canCreateApplicationRoleName}},
+            };
 
             var userManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(context));
             var roleManager = new RoleManager<IdentityRole>(new RoleStore<IdentityRole>(context));
 
-            if (!roleManager.RoleExists(canCreateAbsenceRoleName))
+            foreach (var role in roles.Where(role => !roleManager.RoleExists(role)))
             {
-                roleManager.Create(new IdentityRole("canCreateAbsence"));
+                roleManager.Create(new IdentityRole(role));
             }
 
-            var user = new ApplicationUser
+            foreach (var user in users)
             {
-                Email = userEmail,
-                UserName = userEmail,
-            };
-            var result = userManager.Create(user, userPassword);
-
-            if (result.Succeeded)
-            {
-                userManager.AddToRole(user.Id, canCreateAbsenceRoleName);
+                var applicationUser = new ApplicationUser
+                {
+                    Email = user.Email,
+                    UserName = user.Email,
+                };
+                var result = userManager.Create(applicationUser, user.Password);
+                if (result.Succeeded)
+                {
+                    foreach (var role in user.Roles)
+                    {
+                        userManager.AddToRole(applicationUser.Id, role);
+                    }
+                }
             }
 
             #endregion
@@ -63,13 +86,24 @@ namespace Fable.Migrations
                     StreetAddress = "800 2nd St",
                 });
 
+            context.SaveChanges();
+
             #endregion
 
-            //context.Absences.AddOrUpdate(a => a.Description,
-            //    new Absence
-            //    {
+            #region Seed absences
 
-            //    });
+            context.Absences.AddOrUpdate(a => a.Description,
+                new Absence
+                {
+                    Absentee = context.Users.First(u => u.Email == teacherEmail),
+                    Start = new DateTime(2014, 12, 16, 8, 0, 0),
+                    End = new DateTime(2014, 12, 16, 15, 0, 0),
+                    School = context.Schools.First(),
+                    Location = "Room 123",
+                    Description = "do some stuff",
+                });
+
+            #endregion
         }
     }
 }

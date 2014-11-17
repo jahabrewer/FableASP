@@ -31,6 +31,7 @@ namespace Fable.Models
         }
 
         public DbSet<School> Schools { get; set; }
-        public DbSet<Absence> Absences { get; set; } 
+        public DbSet<Absence> Absences { get; set; }
+        public DbSet<Application> Applications { get; set; }
     }
 }

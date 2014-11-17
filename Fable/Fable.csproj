@@ -158,7 +158,9 @@
     <Compile Include="App_Start\IdentityConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\Startup.Auth.cs" />
+    <Compile Include="Controllers\AbsencesController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\ApplicationsController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
     <Compile Include="Controllers\SchoolsController.cs" />
@@ -177,9 +179,14 @@
     <Compile Include="Migrations\201411162316290_AddedAbsence.Designer.cs">
       <DependentUpon>201411162316290_AddedAbsence.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201411170002361_AddedApplication.cs" />
+    <Compile Include="Migrations\201411170002361_AddedApplication.Designer.cs">
+      <DependentUpon>201411170002361_AddedApplication.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Absence.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
+    <Compile Include="Models\Application.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Models\School.cs" />
@@ -248,6 +255,11 @@
     <Content Include="Views\Schools\Details.cshtml" />
     <Content Include="Views\Schools\Edit.cshtml" />
     <Content Include="Views\Schools\Index.cshtml" />
+    <Content Include="Views\Absences\Create.cshtml" />
+    <Content Include="Views\Absences\Delete.cshtml" />
+    <Content Include="Views\Absences\Details.cshtml" />
+    <Content Include="Views\Absences\Edit.cshtml" />
+    <Content Include="Views\Absences\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -268,6 +280,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201411162316290_AddedAbsence.resx">
       <DependentUpon>201411162316290_AddedAbsence.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201411170002361_AddedApplication.resx">
+      <DependentUpon>201411170002361_AddedApplication.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
