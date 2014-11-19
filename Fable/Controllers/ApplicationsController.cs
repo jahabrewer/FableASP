@@ -10,6 +10,7 @@ using System.Web.Mvc;
 using Fable.Models;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
+using WebGrease.Css.Extensions;
 
 namespace Fable.Controllers
 {
@@ -26,7 +27,7 @@ namespace Fable.Controllers
 
         // POST: Applications/Accept
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken] // todo turn this back on
         public async Task<ActionResult> Accept(int applicationId)
         {
             var application = await ApplicationDbContext.Applications.FindAsync(applicationId);
@@ -49,13 +50,30 @@ namespace Fable.Controllers
                     "Application is not in a valid state to be Accepted");
             }
 
-            // todo verify that the absence has no other accepted applications
+            // verify that the absence has no fulfiller
+            if (application.Absence.Fulfiller != null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.Forbidden, "Absence already has a value for Fulfiller");
+            }
 
-            // todo set the current user as fulfiller on the absence
+            // set the current user as fulfiller on the absence
+            application.Absence.Fulfiller = application.Applicant;
+            ApplicationDbContext.Entry(application.Absence).State = EntityState.Modified;
 
-            application.ApplicationState = ApplicationState.Accepted;
-            application.ApplicationStateModified = DateTime.UtcNow;
-            ApplicationDbContext.Entry(application).State = EntityState.Modified;
+            // accept this application and reject all other applications
+            ApplicationDbContext.Applications
+                .Where(app =>
+                    app.Absence.AbsenceId == application.Absence.AbsenceId
+                    && application.ApplicationState == ApplicationState.WaitingForDecision)
+                .ForEach(app =>
+                {
+                    app.ApplicationState = app.ApplicationId == application.ApplicationId
+                        ? ApplicationState.Accepted
+                        : ApplicationState.Rejected;
+                    app.ApplicationStateModified = DateTime.UtcNow;
+                    ApplicationDbContext.Entry(app).State = EntityState.Modified;
+                });
+
             await ApplicationDbContext.SaveChangesAsync();
             return RedirectToAction("Details", "Absences", new {id = application.Absence.AbsenceId});
         }

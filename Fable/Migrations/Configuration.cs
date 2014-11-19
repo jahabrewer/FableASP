@@ -31,13 +31,15 @@ namespace Fable.Migrations
 
             const string adminEmail = "ava@example.com";
             const string teacherEmail = "tess@example.com";
-            const string substituteEmail = "steve@example.com";
+            const string substitute1Email = "steve@example.com";
+            const string substitute2Email = "sally@example.com";
 
             var users = new[]
             {
                 new {Email = adminEmail, Password = "avaForAdmin", Roles = new string[] {}},
                 new {Email = teacherEmail, Password = "tessForTeacher", Roles = new[] {canCreateAbsenceRoleName}},
-                new {Email = substituteEmail, Password = "steveForSubstitute", Roles = new[] {canCreateApplicationRoleName}},
+                new {Email = substitute1Email, Password = "steveForSubstitute", Roles = new[] {canCreateApplicationRoleName}},
+                new {Email = substitute2Email, Password = "sallyForSubstitute", Roles = new[] {canCreateApplicationRoleName}},
             };
 
             var userManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(context));
