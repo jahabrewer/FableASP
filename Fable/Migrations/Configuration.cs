@@ -88,9 +88,10 @@ namespace Fable.Migrations
             context.Absences.AddOrUpdate(a => a.Description,
                 new Absence
                 {
+                    State = AbsenceState.Open,
                     Absentee = context.Users.First(u => u.Email == teacherEmail),
-                    Start = new DateTime(2014, 12, 16, 8, 0, 0),
-                    End = new DateTime(2014, 12, 16, 15, 0, 0),
+                    Start = new DateTime(2015, 12, 16, 8, 0, 0),
+                    End = new DateTime(2015, 12, 16, 15, 0, 0),
                     School = context.Schools.First(),
                     Location = "Room 123",
                     Description = "do some stuff",

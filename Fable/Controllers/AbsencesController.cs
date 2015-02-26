@@ -125,6 +125,7 @@ namespace Fable.Controllers
             return View(absence);
         }
 
+        // TODO Add role/ownership check
         // POST: Absences/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
