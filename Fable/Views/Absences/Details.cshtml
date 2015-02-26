@@ -16,6 +16,14 @@
     <hr />
     <dl class="dl-horizontal">
         <dt>
+            @Html.DisplayNameFor(model => model.School)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.School.Name)
+        </dd>
+
+        <dt>
             @Html.DisplayNameFor(model => model.Location)
         </dt>
 
@@ -47,7 +55,57 @@
             @Html.DisplayFor(model => model.Description)
         </dd>
 
+        <dt>
+            @Html.DisplayNameFor(model => model.Absentee)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Absentee.UserName)
+        </dd>
+
     </dl>
+</div>
+<div>
+    <h4>Applications</h4>
+    <table class="table">
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Applications[0].Applicant)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Applications[0].ApplicationState)
+            </th>
+            <th />
+        </tr>
+        @if (Model.Applications.Count == 0)
+        {
+            <tr>
+                <td colspan="3">No applications!</td>
+            </tr>
+        }
+        else
+        {
+            foreach (var application in Model.Applications)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(model => application.Applicant.UserName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(model => application.ApplicationState)
+                    </td>
+                    <td>
+                        @using (Html.BeginForm("Accept", "Applications"))
+                        {
+                            @Html.AntiForgeryToken()
+                            @Html.Hidden("applicationId", application.ApplicationId)
+                            <input type="submit" value="Accept" class="btn btn-default" />
+                        }
+                    </td>
+                </tr>
+            }
+        }
+    </table>
 </div>
 <p>
     @Html.ActionLink("Edit", "Edit", new { id = Model.AbsenceId }) |

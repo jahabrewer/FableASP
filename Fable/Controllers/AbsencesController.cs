@@ -42,6 +42,15 @@ namespace Fable.Controllers
             {
                 return HttpNotFound();
             }
+
+            // If user is not teacher or not the absentee, clear the Applications
+            string userId = User.Identity.GetUserId();
+            var roles = UserManager.GetRoles(userId);
+            if (absence.Absentee.Id != userId || !roles.Contains(Roles.CanViewOwnApplications))
+            {
+                absence.Applications = new Application[0];
+            }
+
             return View(absence);
         }
 

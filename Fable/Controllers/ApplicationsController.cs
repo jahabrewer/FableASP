@@ -27,7 +27,7 @@ namespace Fable.Controllers
 
         // POST: Applications/Accept
         [HttpPost]
-        //[ValidateAntiForgeryToken] // todo turn this back on
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult> Accept(int applicationId)
         {
             var application = await ApplicationDbContext.Applications.FindAsync(applicationId);
@@ -37,8 +37,7 @@ namespace Fable.Controllers
             }
 
             // verify that this user owns the absence that was applied for
-            var currentUser = await UserManager.FindByIdAsync(User.Identity.GetUserId());
-            if (application.Absence.Absentee.Id != currentUser.Id)
+            if (application.Absence.Absentee.Id != User.Identity.GetUserId())
             {
                 return HttpNotFound();
             }

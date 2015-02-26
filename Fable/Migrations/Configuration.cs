@@ -20,15 +20,6 @@ namespace Fable.Migrations
         {
             #region Seed users and roles
 
-            const string canCreateAbsenceRoleName = "canCreateAbsence";
-            const string canCreateApplicationRoleName = "canCreateApplication";
-
-            var roles = new[]
-            {
-                canCreateAbsenceRoleName,
-                canCreateApplicationRoleName,
-            };
-
             const string adminEmail = "ava@example.com";
             const string teacherEmail = "tess@example.com";
             const string substitute1Email = "steve@example.com";
@@ -36,16 +27,16 @@ namespace Fable.Migrations
 
             var users = new[]
             {
-                new {Email = adminEmail, Password = "avaForAdmin", Roles = new string[] {}},
-                new {Email = teacherEmail, Password = "tessForTeacher", Roles = new[] {canCreateAbsenceRoleName}},
-                new {Email = substitute1Email, Password = "steveForSubstitute", Roles = new[] {canCreateApplicationRoleName}},
-                new {Email = substitute2Email, Password = "sallyForSubstitute", Roles = new[] {canCreateApplicationRoleName}},
+                new {Email = adminEmail, Password = "avaForAdmin", Roles = Roles.AdminRoles},
+                new {Email = teacherEmail, Password = "tessForTeacher", Roles = Roles.TeacherRoles},
+                new {Email = substitute1Email, Password = "steveForSubstitute", Roles = Roles.SubstituteRoles},
+                new {Email = substitute2Email, Password = "sallyForSubstitute", Roles = Roles.SubstituteRoles},
             };
 
             var userManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(context));
             var roleManager = new RoleManager<IdentityRole>(new RoleStore<IdentityRole>(context));
 
-            foreach (var role in roles.Where(role => !roleManager.RoleExists(role)))
+            foreach (var role in Roles.AllRoles.Where(role => !roleManager.RoleExists(role)))
             {
                 roleManager.Create(new IdentityRole(role));
             }

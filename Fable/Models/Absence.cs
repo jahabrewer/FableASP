@@ -23,5 +23,6 @@ namespace Fable.Models
         public virtual ApplicationUser Absentee { get; set; }
         public virtual ApplicationUser Fulfiller { get; set; }
         public virtual School School { get; set; }
+        public virtual IList<Application> Applications { get; set; }
     }
 }
