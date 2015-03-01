@@ -30,8 +30,8 @@ namespace Fable.Models
             return new ApplicationDbContext();
         }
 
-        public DbSet<School> Schools { get; set; }
-        public DbSet<Absence> Absences { get; set; }
-        public DbSet<Application> Applications { get; set; }
+        public virtual DbSet<School> Schools { get; set; }
+        public virtual DbSet<Absence> Absences { get; set; }
+        public virtual DbSet<Application> Applications { get; set; }
     }
 }

@@ -16,10 +16,16 @@ namespace Fable.Controllers
         protected ApplicationDbContext ApplicationDbContext { get; set; }
         protected UserManager<ApplicationUser> UserManager { get; set; }
 
-        public ApplicationsController()
+        public ApplicationsController() : this(new ApplicationDbContext())
         {
-            ApplicationDbContext = new ApplicationDbContext();
-            UserManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(ApplicationDbContext));
+            //ApplicationDbContext = new ApplicationDbContext();
+            //UserManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(ApplicationDbContext));
+        }
+
+        public ApplicationsController(ApplicationDbContext context)
+        {
+            ApplicationDbContext = context;
+            UserManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(context));
         }
 
         // POST: Applications/Accept
