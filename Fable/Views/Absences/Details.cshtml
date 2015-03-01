@@ -1,4 +1,5 @@
-﻿@model Fable.Models.Absence
+﻿@using Fable.Models
+@model AbsenceDetailsViewModel
 
 @{
     ViewBag.Title = "Details";
@@ -8,114 +9,127 @@
 @using (Html.BeginForm("Apply", "Absences"))
 {
     @Html.AntiForgeryToken()
-    @Html.HiddenFor(model => model.AbsenceId)
+    @Html.Hidden("absenceId", Model.Absence.AbsenceId)
     <input type="submit" value="Apply" class="btn btn-default" />
+}
+@if (Model.MyApplication != null && Model.MyApplication.ApplicationState == ApplicationState.WaitingForDecision)
+{
+    <p>Your application is waiting for decision.</p>
+    using (Html.BeginForm("Retract", "Applications"))
+    {
+        @Html.AntiForgeryToken()
+        @Html.Hidden("applicationId", Model.MyApplication.ApplicationId)
+        <input type="submit" value="Retract" class="btn btn-default" />
+    }
 }
 <div>
     <h4>Absence</h4>
     <hr />
     <dl class="dl-horizontal">
         <dt>
-            @Html.DisplayNameFor(model => model.State)
+            @Html.DisplayNameFor(model => model.Absence.State)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.State)
+            @Html.DisplayFor(model => model.Absence.State)
         </dd>
 
         <dt>
-            @Html.DisplayNameFor(model => model.School)
+            @Html.DisplayNameFor(model => model.Absence.School)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.School.Name)
+            @Html.DisplayFor(model => model.Absence.School.Name)
         </dd>
 
         <dt>
-            @Html.DisplayNameFor(model => model.Location)
+            @Html.DisplayNameFor(model => model.Absence.Location)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.Location)
+            @Html.DisplayFor(model => model.Absence.Location)
         </dd>
 
         <dt>
-            @Html.DisplayNameFor(model => model.Start)
+            @Html.DisplayNameFor(model => model.Absence.Start)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.Start)
+            @Html.DisplayFor(model => model.Absence.Start)
         </dd>
 
         <dt>
-            @Html.DisplayNameFor(model => model.End)
+            @Html.DisplayNameFor(model => model.Absence.End)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.End)
+            @Html.DisplayFor(model => model.Absence.End)
         </dd>
 
         <dt>
-            @Html.DisplayNameFor(model => model.Description)
+            @Html.DisplayNameFor(model => model.Absence.Description)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.Description)
+            @Html.DisplayFor(model => model.Absence.Description)
         </dd>
 
         <dt>
-            @Html.DisplayNameFor(model => model.Absentee)
+            @Html.DisplayNameFor(model => model.Absence.Absentee)
         </dt>
 
         <dd>
-            @Html.DisplayFor(model => model.Absentee.UserName)
+            @Html.DisplayFor(model => model.Absence.Absentee.UserName)
         </dd>
 
     </dl>
 </div>
-<div>
-    <h4>Applications</h4>
-    <table class="table">
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Applications[0].Applicant)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Applications[0].ApplicationState)
-            </th>
-            <th />
-        </tr>
-        @if (Model.Applications.Count == 0)
-        {
+@if (Model.ShowApplications)
+{
+    <div>
+        <h4>Applications</h4>
+        <table class="table">
             <tr>
-                <td colspan="3">No applications!</td>
+                <th>
+                    @Html.DisplayNameFor(model => model.Absence.Applications[0].Applicant)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Absence.Applications[0].ApplicationState)
+                </th>
+                <th />
             </tr>
-        }
-        else
-        {
-            foreach (var application in Model.Applications)
+            @if (Model.Absence.Applications.Count == 0)
             {
                 <tr>
-                    <td>
-                        @Html.DisplayFor(model => application.Applicant.UserName)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(model => application.ApplicationState)
-                    </td>
-                    <td>
-                        @using (Html.BeginForm("Accept", "Applications"))
-                        {
-                            @Html.AntiForgeryToken()
-                            @Html.Hidden("applicationId", application.ApplicationId)
-                            <input type="submit" value="Accept" class="btn btn-default" />
-                        }
-                    </td>
+                    <td colspan="3">No applications!</td>
                 </tr>
             }
-        }
-    </table>
-</div>
+            else
+            {
+                foreach (var application in Model.Absence.Applications)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(model => application.Applicant.UserName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => application.ApplicationState)
+                        </td>
+                        <td>
+                            @using (Html.BeginForm("Accept", "Applications"))
+                            {
+                                @Html.AntiForgeryToken()
+                                @Html.Hidden("applicationId", application.ApplicationId)
+                                <input type="submit" value="Accept" class="btn btn-default" />
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </table>
+    </div>
+}
 <p>
-    @Html.ActionLink("Edit", "Edit", new { id = Model.AbsenceId }) |
+    @Html.ActionLink("Edit", "Edit", new { id = Model.Absence.AbsenceId }) |
     @Html.ActionLink("Back to List", "Index")
 </p>

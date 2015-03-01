@@ -43,15 +43,19 @@ namespace Fable.Controllers
                 return HttpNotFound();
             }
 
-            // If user is not teacher or not the absentee, clear the Applications
+            // Only show application list if the user owns the absence
             string userId = User.Identity.GetUserId();
-            var roles = UserManager.GetRoles(userId);
-            if (absence.Absentee.Id != userId || !roles.Contains(Roles.CanViewOwnApplications))
-            {
-                absence.Applications = new Application[0];
-            }
+            bool showApplications = absence.Absentee.Id == userId;
 
-            return View(absence);
+            // If this is a sub, find their application if it exists
+            Application myApplication = absence.Applications.FirstOrDefault(app => app.Applicant.Id == userId);
+
+            return View(new AbsenceDetailsViewModel
+            {
+                Absence = absence,
+                MyApplication = myApplication,
+                ShowApplications = showApplications,
+            });
         }
 
         // GET: Absences/Create

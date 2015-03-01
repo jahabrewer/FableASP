@@ -10,7 +10,6 @@ namespace Fable.Models
     {
         public static string CanCreateAbsence { get { return "canCreateAbsence"; } }
         public static string CanCreateApplication { get { return "canCreateApplication"; } }
-        public static string CanViewOwnApplications { get { return "canViewOwnApplications"; } }
 
         public static ICollection<string> AdminRoles { get { return new Collection<string>(); } }
 
@@ -21,7 +20,6 @@ namespace Fable.Models
                 return new Collection<string>
                 {
                     CanCreateAbsence,
-                    CanViewOwnApplications,
                 };
             }
         }
@@ -45,7 +43,6 @@ namespace Fable.Models
                 {
                     CanCreateAbsence,
                     CanCreateApplication,
-                    CanViewOwnApplications,
                 };
             }
         }

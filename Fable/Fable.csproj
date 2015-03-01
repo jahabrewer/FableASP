@@ -194,6 +194,7 @@
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Absence.cs" />
     <Compile Include="Models\AbsenceState.cs" />
+    <Compile Include="Models\AbsenceViewModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\Application.cs" />
     <Compile Include="Models\IdentityModels.cs" />

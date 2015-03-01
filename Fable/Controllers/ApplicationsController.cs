@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.Mvc;
 using Fable.Models;
 using Microsoft.AspNet.Identity;
@@ -49,14 +46,16 @@ namespace Fable.Controllers
                     "Application is not in a valid state to be Accepted");
             }
 
-            // verify that the absence has no fulfiller
-            if (application.Absence.Fulfiller != null)
+            // verify that the absence is open
+            if (application.Absence.State != AbsenceState.Open)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.Forbidden, "Absence already has a value for Fulfiller");
+                return new HttpStatusCodeResult(HttpStatusCode.Forbidden,
+                    "Absence is not in valid state to have an Application Retracted");
             }
 
-            // set the current user as fulfiller on the absence
+            // set the current user as fulfiller on the absence and transition absence to assigned state
             application.Absence.Fulfiller = application.Applicant;
+            application.Absence.State = AbsenceState.Assigned;
             ApplicationDbContext.Entry(application.Absence).State = EntityState.Modified;
 
             // accept this application and reject all other applications
@@ -75,6 +74,46 @@ namespace Fable.Controllers
 
             await ApplicationDbContext.SaveChangesAsync();
             return RedirectToAction("Details", "Absences", new {id = application.Absence.AbsenceId});
+        }
+
+        // POST: Applications/Retract
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> Retract(int applicationId)
+        {
+            var application = await ApplicationDbContext.Applications.FindAsync(applicationId);
+            if (application == null)
+            {
+                return HttpNotFound();
+            }
+
+            // verify that this user owns the application
+            if (application.Applicant.Id != User.Identity.GetUserId())
+            {
+                return HttpNotFound();
+            }
+
+            // verify that the application is in a valid state for retracting
+            if (application.ApplicationState != ApplicationState.WaitingForDecision)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.Forbidden,
+                    "Application is not in a valid state to be Retracted");
+            }
+
+            // verify that the absence is open
+            if (application.Absence.State != AbsenceState.Open)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.Forbidden,
+                    "Absence is not in valid state to have an Application Retracted");
+            }
+
+            // retract the application
+            application.ApplicationState = ApplicationState.Retracted;
+            application.ApplicationStateModified = DateTime.UtcNow;
+            ApplicationDbContext.Entry(application).State = EntityState.Modified;
+
+            await ApplicationDbContext.SaveChangesAsync();
+            return RedirectToAction("Details", "Absences", new { id = application.Absence.AbsenceId });
         }
 
         // GET: Applications
