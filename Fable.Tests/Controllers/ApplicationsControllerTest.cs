@@ -62,8 +62,11 @@ namespace Fable.Tests.Controllers
             Assert.IsType<HttpNotFoundResult>(result);
         }
 
-        [Fact]
-        public async Task Accept_ApplicationIsNotWaitingForDecision_ReturnsHttpForbidden()
+        [Theory]
+        [InlineData(ApplicationState.Accepted)]
+        [InlineData(ApplicationState.Retracted)]
+        [InlineData(ApplicationState.Rejected)]
+        public async Task Accept_ApplicationIsNotWaitingForDecision_ReturnsHttpForbidden(ApplicationState state)
         {
             var userId = Guid.NewGuid().ToString();
             var data = new List<Application>
@@ -71,7 +74,7 @@ namespace Fable.Tests.Controllers
                 new Application
                 {
                     ApplicationId = 10,
-                    ApplicationState = ApplicationState.Retracted,
+                    ApplicationState = state,
                     Absence = new Absence
                     {
                         AbsenceId = 1,
