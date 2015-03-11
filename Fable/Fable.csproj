@@ -191,6 +191,10 @@
     <Compile Include="Migrations\201502261515390_AddedAbsenceState.Designer.cs">
       <DependentUpon>201502261515390_AddedAbsenceState.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201503111505006_MovedRequiredAttributeOnAbsenceSchoolToForeignKey.cs" />
+    <Compile Include="Migrations\201503111505006_MovedRequiredAttributeOnAbsenceSchoolToForeignKey.Designer.cs">
+      <DependentUpon>201503111505006_MovedRequiredAttributeOnAbsenceSchoolToForeignKey.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Absence.cs" />
     <Compile Include="Models\AbsenceState.cs" />
@@ -300,6 +304,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201502261515390_AddedAbsenceState.resx">
       <DependentUpon>201502261515390_AddedAbsenceState.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201503111505006_MovedRequiredAttributeOnAbsenceSchoolToForeignKey.resx">
+      <DependentUpon>201503111505006_MovedRequiredAttributeOnAbsenceSchoolToForeignKey.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

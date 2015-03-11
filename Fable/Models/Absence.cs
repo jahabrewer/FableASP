@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Web;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Fable.Models
 {
@@ -27,6 +26,8 @@ namespace Fable.Models
         public virtual ApplicationUser Absentee { get; set; }
         public virtual ApplicationUser Fulfiller { get; set; }
         [Required]
+        public int SchoolId { get; set; }
+        [ForeignKey("SchoolId")]
         public virtual School School { get; set; }
         public virtual IList<Application> Applications { get; set; }
     }

@@ -62,8 +62,6 @@ namespace Fable.Controllers
             // set the current user as fulfiller on the absence and transition absence to assigned state
             application.Absence.Fulfiller = application.Applicant;
             application.Absence.State = AbsenceState.Assigned;
-            // Because School is required and validation doesn't lazy load, eager load School
-            await ApplicationDbContext.Entry(application.Absence).Reference(ab => ab.School).LoadAsync();
 
             // accept this application and reject all other applications
             ApplicationDbContext.Applications
