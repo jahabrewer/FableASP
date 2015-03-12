@@ -59,7 +59,7 @@ namespace Fable.Controllers
                     "Absence is not in valid state to have an Application Retracted");
             }
 
-            // set the current user as fulfiller on the absence and transition absence to assigned state
+            // set the applicant as fulfiller on the absence and transition absence to assigned state
             application.Absence.Fulfiller = application.Applicant;
             application.Absence.State = AbsenceState.Assigned;
 
@@ -67,14 +67,13 @@ namespace Fable.Controllers
             ApplicationDbContext.Applications
                 .Where(app =>
                     app.Absence.AbsenceId == application.Absence.AbsenceId
-                    && application.ApplicationState == ApplicationState.WaitingForDecision)
+                    && app.ApplicationState == ApplicationState.WaitingForDecision)
                 .ForEach(app =>
                 {
                     app.ApplicationState = app.ApplicationId == application.ApplicationId
                         ? ApplicationState.Accepted
                         : ApplicationState.Rejected;
                     app.ApplicationStateModified = DateTime.UtcNow;
-                    //ApplicationDbContext.Entry(app).State = EntityState.Modified;
                 });
 
             await ApplicationDbContext.SaveChangesAsync();

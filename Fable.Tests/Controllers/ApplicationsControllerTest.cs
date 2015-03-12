@@ -20,13 +20,13 @@ namespace Fable.Tests.Controllers
         [Fact]
         public async Task Accept_IdDoesNotExistInContext_ReturnsHttpNotFoundResult()
         {
-            var data = new List<Application>().AsQueryable();
-            Mock<DbSet<Application>> mockSet = AsyncMocker.WrapAsAsyncCompatible(data, app => app.ApplicationId);
-            var mockDbContext = new Mock<ApplicationDbContext>();
-            mockDbContext.Setup(c => c.Applications).Returns(mockSet.Object);
-            var controller = new ApplicationsController(mockDbContext.Object);
+            var absenteeId = Guid.NewGuid().ToString();
+            const int applicationId = 12;
+            var applications = new List<Application>();
+            Mock<ApplicationDbContext> mockDbContext;
+            ApplicationsController controller = PerTestSetup(applications, absenteeId, out mockDbContext);
 
-            var result = await controller.Accept(1);
+            var result = await controller.Accept(applicationId);
 
             Assert.IsType<HttpNotFoundResult>(result);
         }
@@ -34,9 +34,9 @@ namespace Fable.Tests.Controllers
         [Fact]
         public async Task Accept_UserDoesNotOwnAbsence_ReturnsHttpNotFoundResult()
         {
-            var userId = Guid.NewGuid().ToString();
+            var absenteeId = Guid.NewGuid().ToString();
             const int applicationId = 12;
-            var data = new List<Application>
+            var applications = new List<Application>
             {
                 new Application
                 {
@@ -47,17 +47,14 @@ namespace Fable.Tests.Controllers
                         AbsenceId = 1,
                         Absentee = new ApplicationUser
                         {
-                            Id = userId,
+                            Id = absenteeId,
                         },
                         State = AbsenceState.Open,
                     }
                 }
-            }.AsQueryable();
-            Mock<DbSet<Application>> mockSet = AsyncMocker.WrapAsAsyncCompatible(data, app => app.ApplicationId);
-            var mockDbContext = new Mock<ApplicationDbContext>();
-            mockDbContext.Setup(c => c.Applications).Returns(mockSet.Object);
-            var controller = new ApplicationsController(mockDbContext.Object);
-            controller.ControllerContext = CreateMockControllerContextWithUser("bogus-user").Object;
+            };
+            Mock<ApplicationDbContext> mockDbContext;
+            ApplicationsController controller = PerTestSetup(applications, "bogus-user", out mockDbContext);
 
             var result = await controller.Accept(applicationId);
 
@@ -70,9 +67,9 @@ namespace Fable.Tests.Controllers
         [InlineData(ApplicationState.Rejected)]
         public async Task Accept_ApplicationIsNotWaitingForDecision_ReturnsHttpForbidden(ApplicationState state)
         {
-            var userId = Guid.NewGuid().ToString();
+            var absenteeId = Guid.NewGuid().ToString();
             const int applicationId = 12;
-            var data = new List<Application>
+            var applications = new List<Application>
             {
                 new Application
                 {
@@ -83,17 +80,14 @@ namespace Fable.Tests.Controllers
                         AbsenceId = 1,
                         Absentee = new ApplicationUser
                         {
-                            Id = userId,
+                            Id = absenteeId,
                         },
                         State = AbsenceState.Open,
                     }
                 }
-            }.AsQueryable();
-            Mock<DbSet<Application>> mockSet = AsyncMocker.WrapAsAsyncCompatible(data, app => app.ApplicationId);
-            var mockDbContext = new Mock<ApplicationDbContext>();
-            mockDbContext.Setup(c => c.Applications).Returns(mockSet.Object);
-            var controller = new ApplicationsController(mockDbContext.Object);
-            controller.ControllerContext = CreateMockControllerContextWithUser(userId).Object;
+            };
+            Mock<ApplicationDbContext> mockDbContext;
+            ApplicationsController controller = PerTestSetup(applications, absenteeId, out mockDbContext);
 
             var result = await controller.Accept(applicationId);
 
@@ -108,9 +102,9 @@ namespace Fable.Tests.Controllers
         [InlineData(AbsenceState.Closed)]
         public async Task Accept_AbsenceIsNotOpen_ReturnsHttpForbidden(AbsenceState state)
         {
-            var userId = Guid.NewGuid().ToString();
+            var absenteeId = Guid.NewGuid().ToString();
             const int applicationId = 12;
-            var data = new List<Application>
+            var applications = new List<Application>
             {
                 new Application
                 {
@@ -121,17 +115,14 @@ namespace Fable.Tests.Controllers
                         AbsenceId = 1,
                         Absentee = new ApplicationUser
                         {
-                            Id = userId,
+                            Id = absenteeId,
                         },
                         State = state,
                     }
                 }
-            }.AsQueryable();
-            Mock<DbSet<Application>> mockSet = AsyncMocker.WrapAsAsyncCompatible(data, app => app.ApplicationId);
-            var mockDbContext = new Mock<ApplicationDbContext>();
-            mockDbContext.Setup(c => c.Applications).Returns(mockSet.Object);
-            var controller = new ApplicationsController(mockDbContext.Object);
-            controller.ControllerContext = CreateMockControllerContextWithUser(userId).Object;
+            };
+            Mock<ApplicationDbContext> mockDbContext;
+            ApplicationsController controller = PerTestSetup(applications, absenteeId, out mockDbContext);
 
             var result = await controller.Accept(applicationId);
 
@@ -142,14 +133,15 @@ namespace Fable.Tests.Controllers
         [Fact]
         public async Task Accept_OnValidCall_ModifiesExpectedData()
         {
-            var userId = Guid.NewGuid().ToString();
+            var absenteeId = Guid.NewGuid().ToString();
+            var applicantId = Guid.NewGuid().ToString();
             const int applicationId = 12;
             var absence = new Absence
             {
                 AbsenceId = 1,
                 Absentee = new ApplicationUser
                 {
-                    Id = userId,
+                    Id = absenteeId,
                 },
                 State = AbsenceState.Open,
                 School = new School
@@ -159,42 +151,58 @@ namespace Fable.Tests.Controllers
                     StreetAddress = "124 Main St"
                 }
             };
-            var absences = new List<Absence> {absence}.AsQueryable();
+            var acceptedApplication = new Application
+            {
+                ApplicationId = applicationId,
+                ApplicationState = ApplicationState.WaitingForDecision,
+                Absence = absence,
+                Applicant = new ApplicationUser
+                {
+                    Id = applicantId,
+                }
+            };
+            var anotherApplicationForSameAbsence = new Application
+            {
+                ApplicationId = applicationId + 1,
+                ApplicationState = ApplicationState.WaitingForDecision,
+                Absence = absence,
+                Applicant = new ApplicationUser
+                {
+                    Id = "some-other-user",
+                }
+            };
             var applications = new List<Application>
             {
-                new Application
-                {
-                    ApplicationId = applicationId,
-                    ApplicationState = ApplicationState.WaitingForDecision,
-                    Absence = absence,
-                }
-            }.AsQueryable();
+                acceptedApplication,
+                anotherApplicationForSameAbsence,
+            };
+            Mock<ApplicationDbContext> mockDbContext;
+            ApplicationsController controller = PerTestSetup(applications, absenteeId, out mockDbContext);
+
+            await controller.Accept(applicationId);
+            
+            mockDbContext.Verify(c => c.SaveChangesAsync(), Times.Once);
+            Assert.Equal(AbsenceState.Assigned, absence.State);
+            Assert.Equal(applicantId, absence.Fulfiller.Id);
+            Assert.Equal(ApplicationState.Accepted, acceptedApplication.ApplicationState);
+            Assert.Equal(ApplicationState.Rejected, anotherApplicationForSameAbsence.ApplicationState);
+        }
+
+        private ApplicationsController PerTestSetup(
+            IList<Application> applications,
+            string currentUserId,
+            out Mock<ApplicationDbContext> mockDbContext)
+        {
             Mock<DbSet<Application>> mockApplicationSet =
-                AsyncMocker.WrapAsAsyncCompatible(applications, app => app.ApplicationId);
-            Mock<DbSet<Absence>> mockAbsenceSet =
-                AsyncMocker.WrapAsAsyncCompatible(absences, ab => ab.AbsenceId);
-            //var users = new List<ApplicationUser>
-            //{
-            //    new ApplicationUser
-            //    {
-            //        UserName = "fake@example.com",
-            //        Id = "1",
-            //    }
-            //}.AsQueryable();
-            //Mock<DbSet<ApplicationUser>> mockUserSet = AsyncMocker.WrapAsAsyncCompatible(users, u => u.Id);
-            var mockDbContext = new Mock<ApplicationDbContext> {CallBase = true};
+                AsyncMocker.WrapAsAsyncCompatible(applications.AsQueryable(), app => app.ApplicationId);
+            mockDbContext = new Mock<ApplicationDbContext> { CallBase = true };
             mockDbContext.Setup(c => c.Applications).Returns(mockApplicationSet.Object);
-            mockDbContext.Setup(c => c.Absences).Returns(mockAbsenceSet.Object);
-            //mockDbContext.Setup(c => c.Entry(It.IsAny<Absence>()).Reference(ab => ab.School).LoadAsync()).Verifiable();
-            //mockDbContext.Setup(c => c.Users).Returns(mockUserSet.Object);
             var controller = new ApplicationsController(mockDbContext.Object);
-            var mockControllerContext = CreateMockControllerContextWithUser(userId);
-            mockControllerContext.Setup(cc => cc.RouteData).Returns((RouteData) null);
+            var mockControllerContext = CreateMockControllerContextWithUser(currentUserId);
+            mockControllerContext.Setup(cc => cc.RouteData).Returns((RouteData)null);
             controller.ControllerContext = mockControllerContext.Object;
 
-            var result = await controller.Accept(applicationId);
-
-            mockDbContext.Verify(c => c.SaveChangesAsync(), Times.Once);
+            return controller;
         }
 
         private Mock<ControllerContext> CreateMockControllerContextWithUser(string userId)
