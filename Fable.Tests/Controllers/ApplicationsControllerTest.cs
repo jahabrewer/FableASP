@@ -188,7 +188,161 @@ namespace Fable.Tests.Controllers
             Assert.Equal(ApplicationState.Rejected, anotherApplicationForSameAbsence.ApplicationState);
         }
 
-        private ApplicationsController PerTestSetup(
+        [Fact]
+        public async Task Retract_IdDoesNotExistInContext_ReturnsHttpNotFound()
+        {
+            string applicantId = Guid.NewGuid().ToString();
+            const int applicationId = 65;
+            var applications = new List<Application>();
+            Mock<ApplicationDbContext> mockDbContext;
+            ApplicationsController controller = PerTestSetup(applications, applicantId, out mockDbContext);
+
+            var result = await controller.Retract(applicationId);
+
+            Assert.IsType<HttpNotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task Retract_UserDoesNotOwnApplication_ReturnsHttpNotFound()
+        {
+            string applicantId = Guid.NewGuid().ToString();
+            const int applicationId = 65;
+            var applications = new List<Application>
+            {
+                new Application
+                {
+                    ApplicationId = applicationId,
+                    Applicant = new ApplicationUser
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                    }
+                }
+            };
+            Mock<ApplicationDbContext> mockDbContext;
+            ApplicationsController controller = PerTestSetup(applications, applicantId, out mockDbContext);
+            Mock<ControllerContext> mockControllerContext = Mock.Get(controller.ControllerContext);
+
+            var result = await controller.Retract(applicationId);
+
+            Assert.IsType<HttpNotFoundResult>(result);
+            mockControllerContext.VerifyGet(c => c.HttpContext.User, Times.AtLeastOnce, "Did not check user identity");
+        }
+
+        [Theory]
+        [InlineData(ApplicationState.Accepted)]
+        [InlineData(ApplicationState.Retracted)]
+        [InlineData(ApplicationState.Rejected)]
+        public async Task Retract_ApplicationIsNotWaitingForDecision_ReturnsHttpForbidden(ApplicationState state)
+        {
+            string applicantId = Guid.NewGuid().ToString();
+            const int applicationId = 65;
+            var applications = new List<Application>
+            {
+                new Application
+                {
+                    ApplicationId = applicationId,
+                    Applicant = new ApplicationUser
+                    {
+                        Id = applicantId,
+                    },
+                    ApplicationState = state
+                }
+            };
+            Mock<ApplicationDbContext> mockDbContext;
+            ApplicationsController controller = PerTestSetup(applications, applicantId, out mockDbContext);
+
+            var result = await controller.Retract(applicationId);
+
+            Assert.IsType<HttpStatusCodeResult>(result);
+            Assert.Equal(((HttpStatusCodeResult)result).StatusCode, (int)HttpStatusCode.Forbidden);
+        }
+
+        [Theory]
+        [InlineData(AbsenceState.Assigned)]
+        [InlineData(AbsenceState.New)]
+        [InlineData(AbsenceState.InProgress)]
+        [InlineData(AbsenceState.Closed)]
+        public async Task Retract_AbsenceIsNotOpen_ReturnsHttpForbidden(AbsenceState state)
+        {
+            string applicantId = Guid.NewGuid().ToString();
+            const int applicationId = 65;
+            const int absenceId = 22;
+            var applications = new List<Application>
+            {
+                new Application
+                {
+                    ApplicationId = applicationId,
+                    Applicant = new ApplicationUser
+                    {
+                        Id = applicantId,
+                    },
+                    ApplicationState = ApplicationState.WaitingForDecision,
+                    Absence = new Absence
+                    {
+                        AbsenceId = absenceId,
+                        State = state,
+                    }
+                }
+            };
+            Mock<ApplicationDbContext> mockDbContext;
+            ApplicationsController controller = PerTestSetup(applications, applicantId, out mockDbContext);
+
+            var result = await controller.Retract(applicationId);
+
+            Assert.IsType<HttpStatusCodeResult>(result);
+            Assert.Equal(((HttpStatusCodeResult)result).StatusCode, (int)HttpStatusCode.Forbidden);
+        }
+
+        [Fact]
+        public async Task Retract_OnValidCall_ModifiesExpectedData()
+        {
+            string retractingApplicantId = Guid.NewGuid().ToString();
+            string otherApplicantId = Guid.NewGuid().ToString();
+            const int retractedApplicationId = 65;
+            const int otherApplicationId = 89;
+            const int absenceId = 22;
+            var absence = new Absence
+            {
+                AbsenceId = absenceId,
+                State = AbsenceState.Open,
+            };
+            var retractedApplication = new Application
+            {
+                ApplicationId = retractedApplicationId,
+                Applicant = new ApplicationUser
+                {
+                    Id = retractingApplicantId,
+                },
+                ApplicationState = ApplicationState.WaitingForDecision,
+                Absence = absence,
+            };
+            var otherApplication = new Application
+            {
+                ApplicationId = otherApplicationId,
+                Applicant = new ApplicationUser
+                {
+                    Id = otherApplicantId,
+                },
+                ApplicationState = ApplicationState.WaitingForDecision,
+                Absence = absence,
+            };
+            var applications = new List<Application>
+            {
+                retractedApplication,
+                otherApplication,
+            };
+            Mock<ApplicationDbContext> mockDbContext;
+            ApplicationsController controller = PerTestSetup(applications, retractingApplicantId, out mockDbContext);
+
+            await controller.Retract(retractedApplicationId);
+
+            mockDbContext.Verify(db => db.SaveChangesAsync(), Times.Once);
+            Assert.Equal(ApplicationState.Retracted, retractedApplication.ApplicationState);
+            Assert.Equal(ApplicationState.WaitingForDecision, otherApplication.ApplicationState);
+            Assert.Equal(AbsenceState.Open, absence.State);
+        }
+
+        private static ApplicationsController PerTestSetup(
             IList<Application> applications,
             string currentUserId,
             out Mock<ApplicationDbContext> mockDbContext)
@@ -205,7 +359,7 @@ namespace Fable.Tests.Controllers
             return controller;
         }
 
-        private Mock<ControllerContext> CreateMockControllerContextWithUser(string userId)
+        private static Mock<ControllerContext> CreateMockControllerContextWithUser(string userId)
         {
             var claims = new List<Claim>
             {
